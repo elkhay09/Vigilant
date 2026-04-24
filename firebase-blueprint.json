@@ -1,0 +1,165 @@
+{
+  "entities": {
+    "Trade": {
+      "title": "Trade",
+      "description": "A single trade record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "timeEntry": { "type": "string" },
+        "timeClose": { "type": "string" },
+        "symbol": { "type": "string" },
+        "session": { "type": "string" },
+        "direction": { "type": "string", "enum": ["Long", "Short"] },
+        "entry": { "type": "number" },
+        "sl": { "type": "number" },
+        "tp": { "type": "number" },
+        "exit": { "type": "number" },
+        "pnl": { "type": "number" },
+        "rr": { "type": "number" },
+        "lots": { "type": "number" },
+        "strategy": { "type": "string" },
+        "followedRules": { "type": "array", "items": { "type": "string" } },
+        "mentalPre": { "type": "string" },
+        "mentalDuring": { "type": "string" },
+        "mentalPost": { "type": "string" },
+        "notes": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "mfe": { "type": "number" },
+        "mae": { "type": "number" }
+      },
+      "required": ["id", "date", "symbol", "direction", "pnl"]
+    },
+    "TradeReview": {
+      "title": "Trade Review",
+      "description": "Analysis of a specific trade",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tradeId": { "type": "string" },
+        "date": { "type": "string" },
+        "grade": { "type": "string" },
+        "execution": { "type": "string" },
+        "missed": { "type": "string" },
+        "emotion": { "type": "string" },
+        "lesson": { "type": "string" },
+        "mistakes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Premarket": {
+      "title": "Premarket",
+      "description": "Pre-session checklist and notes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "bias": { "type": "string" },
+        "keyLevels": { "type": "string" },
+        "newsToday": { "type": "string" },
+        "avoidToday": { "type": "string" },
+        "checklist": { "type": "array", "items": { "type": "boolean" } },
+        "notes": { "type": "string" }
+      }
+    },
+    "SessionReview": {
+      "title": "Session Review",
+      "description": "End-of-day or period review",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "date": { "type": "string" },
+        "marketConditions": { "type": "string" },
+        "overallMindset": { "type": "string" },
+        "grade": { "type": "string" },
+        "energy": { "type": "string" },
+        "wentWell": { "type": "string" },
+        "challenges": { "type": "string" },
+        "lessons": { "type": "string" },
+        "tomorrowPlan": { "type": "string" }
+      }
+    },
+    "Mistake": {
+      "title": "Mistake",
+      "description": "A single trading mistake entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "impact": { "type": "number" },
+        "recurrence": { "type": "number" }
+      }
+    },
+    "WeeklyOutlook": {
+      "title": "Weekly Outlook",
+      "description": "Macro and weekly preparation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "date": { "type": "string" },
+        "title": { "type": "string" },
+        "newsCalendar": { "type": "string" },
+        "macroDrivers": { "type": "string" },
+        "keyLevels": { "type": "string" },
+        "narrative": { "type": "string" },
+        "bias": { "type": "string" }
+      }
+    },
+    "PlaybookSetup": {
+      "title": "Playbook Setup",
+      "description": "Defined trading strategy",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "symbol": { "type": "string" },
+        "session": { "type": "string" },
+        "timeframe": { "type": "string" },
+        "description": { "type": "string" },
+        "entryRules": { "type": "string" },
+        "invalidation": { "type": "string" },
+        "targetRR": { "type": "string" },
+        "grade": { "type": "string" }
+      }
+    },
+    "RiskSettings": {
+      "title": "Risk Settings",
+      "description": "User risk parameters and goals",
+      "type": "object",
+      "properties": {
+        "dailyLimit": { "type": "number" },
+        "weeklyLimit": { "type": "number" },
+        "maxTrades": { "type": "number" },
+        "monthlyTarget": { "type": "number" },
+        "winRateTarget": { "type": "number" },
+        "maxConsecLosses": { "type": "number" },
+        "nonNegotiables": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "Profile": {
+      "title": "Profile",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "avatar": { "type": "string" },
+        "lastBackup": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}/trades/{tradeId}": { "schema": "Trade", "description": "User's trade records" },
+    "/users/{userId}/tradeReviews/{reviewId}": { "schema": "TradeReview", "description": "Analyses of trades" },
+    "/users/{userId}/premarkets/{premarketId}": { "schema": "Premarket", "description": "Morning checklists" },
+    "/users/{userId}/reviews/{reviewId}": { "schema": "SessionReview", "description": "Daily/Weekly reviews" },
+    "/users/{userId}/mistakes/{mistakeId}": { "schema": "Mistake", "description": "Database of errors" },
+    "/users/{userId}/outlooks/{outlookId}": { "schema": "WeeklyOutlook", "description": "Weekly prep/narrative" },
+    "/users/{userId}/setups/{setupId}": { "schema": "PlaybookSetup", "description": "Trading playbook setups" },
+    "/users/{userId}": { "schema": "object", "description": "User root document containing settings and profile" },
+    "/authorized_users/{email}": { "schema": "object", "description": "Whitelist of authorized professional accounts" }
+  }
+}

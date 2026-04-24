@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Primitives ---
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validators ---
+
+    function isValidTrade(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.date is string && data.date.size() <= 10 &&
+             data.symbol is string && data.symbol.size() <= 20 &&
+             data.direction in ['Long', 'Short'] &&
+             data.pnl is number &&
+             (data.get('notes', '') is string && data.get('notes', '').size() <= 5000) &&
+             (data.get('followedRules', []).size() <= 50);
+    }
+
+    function isValidTradeReview(userId, data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.tradeId is string && data.tradeId.size() <= 128 &&
+             exists(/databases/$(database)/documents/users/$(userId)/trades/$(data.tradeId)) &&
+             (data.get('mistakes', []).size() <= 20);
+    }
+
+    function isValidPremarket(data) {
+      return data.id is string && data.date is string &&
+             (data.get('checklist', []).size() <= 30);
+    }
+
+    function isValidRiskSettings(data) {
+      return data.dailyLimit is number && data.dailyLimit >= 0 &&
+             data.weeklyLimit is number && data.weeklyLimit >= 0 &&
+             data.maxTrades is number && data.maxTrades >= 0;
+    }
+
+    // --- Rule Blocks ---
+
+    match /users/{userId} {
+      
+      match /trades/{tradeId} {
+        allow get: if isOwner(userId) && isValidId(tradeId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(tradeId) && isValidTrade(incoming());
+        allow update: if isOwner(userId) && isValidId(tradeId) && isValidTrade(incoming()) &&
+                        incoming().date == existing().date; // Immutability
+        allow delete: if isOwner(userId);
+      }
+
+      match /tradeReviews/{reviewId} {
+        allow get: if isOwner(userId) && isValidId(reviewId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(reviewId) && isValidTradeReview(userId, incoming());
+        allow update: if isOwner(userId) && isValidId(reviewId) && isValidTradeReview(userId, incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /premarkets/{pmId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(pmId) && isValidPremarket(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /reviews/{revId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(revId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /mistakes/{mistId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(mistId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /weeklyOutlooks/{outId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(outId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /setups/{setupId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(setupId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /settings/risk {
+        allow get: if isOwner(userId);
+        allow write: if isOwner(userId) && isValidRiskSettings(incoming());
+      }
+
+      match /profile/main {
+        allow get: if isOwner(userId);
+        allow write: if isOwner(userId) && !incoming().keys().hasAny(['isAdmin', 'role']);
+      }
+    }
+  }
+}
